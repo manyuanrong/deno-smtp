@@ -23,9 +23,11 @@ export class SmtpClient {
     let cmd = await this.readCmd();
     this.assertCode(cmd, CommandCode.READY);
 
-    await this.writeCmd("HELO", config.host);
-    await this.readCmd();
-
+    await this.writeCmd("EHLO", config.host);
+    while (true) {
+      const cmd = await this.readCmd();
+      if (!cmd.args.startsWith("-")) break;
+    }
     await this.writeCmd("AUTH", "LOGIN");
     await this.readCmd();
     await this.writeCmd(btoa(config.username));
@@ -64,16 +66,16 @@ export class SmtpClient {
     if (cmd.code !== code) {
       throw new Error(msg || cmd.code + ": " + cmd.args);
     }
-    // console.log(cmd);
+    // console.log("Read:", cmd);
   }
 
   private async readCmd(): Promise<Command> {
     const result = await this._reader.readLine();
     if (result === EOF) return null;
     const line = decoder.decode(result.line);
-    const firstSpaceIndex = line.indexOf(" ");
-    const cmdCode = line.slice(0, firstSpaceIndex).trim();
-    const cmdArgs = line.slice(firstSpaceIndex).trim();
+    const cmdCode = line.slice(0, 3).trim();
+    const cmdArgs = line.slice(3).trim();
+    // console.log("r", line, cmdCode, cmdArgs);
     return {
       code: cmdCode,
       args: cmdArgs
@@ -81,6 +83,7 @@ export class SmtpClient {
   }
 
   private async writeCmd(...args: string[]) {
+    // console.log("Write:", ...args);
     const data = encoder.encode([...args].join(" ") + "\r\n");
     await this._writer.write(data);
     await this._writer.flush();
