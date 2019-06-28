@@ -8,7 +8,7 @@
 ### Example
 
 ```ts
-import { SmtpClient } from "https://raw.githubusercontent.com/manyuanrong/deno-smtp/master/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.2.0/mod.ts";
 
 const client = new SmtpClient();
 await client.connect({
