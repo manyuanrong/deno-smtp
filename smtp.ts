@@ -1,6 +1,6 @@
 import { CommandCode } from "./code.ts";
 import { ConnectConfig, SendConfig } from "./config.ts";
-import { BufReader, EOF, BufWriter } from "./deps.ts";
+import { BufReader, BufWriter } from "./deps.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -71,7 +71,7 @@ export class SmtpClient {
 
   private async readCmd(): Promise<Command> {
     const result = await this._reader.readLine();
-    if (result === EOF) return null;
+    if (result === Deno.EOF) return null;
     const line = decoder.decode(result.line);
     const cmdCode = line.slice(0, 3).trim();
     const cmdArgs = line.slice(3).trim();
