@@ -1,6 +1,6 @@
 import { CommandCode } from "./code.ts";
 import { ConnectConfig, SendConfig } from "./config.ts";
-import { BufReader, BufWriter } from "./deps.ts";
+import { BufReader, BufWriter, TextProtoReader } from "./deps.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -11,14 +11,23 @@ interface Command {
 }
 
 export class SmtpClient {
-  private _conn: Deno.Conn;
-  private _reader: BufReader;
-  private _writer: BufWriter;
+  private _conn: Deno.Conn | null;
+  private _reader: BufReader | null;
+  private _writer: BufWriter | null;
 
   async connect(config: ConnectConfig) {
-    config = { port: 25, ...config };
-    this._conn = await Deno.dial("tcp", `${config.host}:${config.port}`);
-    this._reader = new BufReader(this._conn);
+    if (config.secure) {
+      this._conn = await Deno.connectTLS({
+        hostname: config.hostname,
+        port: config.port || 465
+      })
+    } else {
+      this._conn = await Deno.connect({
+        hostname: config.hostname,
+        port: config.port || 25
+      })
+    }    const reader = new BufReader(this._conn);
+    this._reader = new TextProtoReader(reader)
     this._writer = new BufWriter(this._conn);
     let cmd = await this.readCmd();
     this.assertCode(cmd, CommandCode.READY);
@@ -59,30 +68,32 @@ export class SmtpClient {
   }
 
   public async close() {
+    if (!this._conn) { return }
     await this._conn.close();
   }
 
-  private assertCode(cmd: Command, code: string, msg?: string) {
-    if (cmd.code !== code) {
-      throw new Error(msg || cmd.code + ": " + cmd.args);
-    }
+  private assertCode(cmd: Command | null, code: string, msg?: string) {
+    if (!cmd) { throw new Error(`invalid cmd`) }
+    if (cmd.code !== code) { throw new Error(msg || `${cmd.code}:${cmd.args}`) }
     // console.log("Read:", cmd);
   }
 
-  private async readCmd(): Promise<Command> {
+  private async readCmd(): Promise<ommand | null> {
+    if (!this._reader) { return null }
     const result = await this._reader.readLine();
     if (result === Deno.EOF) return null;
     const line = decoder.decode(result.line);
-    const cmdCode = line.slice(0, 3).trim();
-    const cmdArgs = line.slice(3).trim();
+    const code = parseInt(line.slice(0, 3).trim());
+    const args = line.slice(3).trim();
     // console.log("r", line, cmdCode, cmdArgs);
     return {
-      code: cmdCode,
-      args: cmdArgs
+      code,
+      args
     };
   }
 
   private async writeCmd(...args: string[]) {
+    if (!this._writer) { return null }
     // console.log("Write:", ...args);
     const data = encoder.encode([...args].join(" ") + "\r\n");
     await this._writer.write(data);
