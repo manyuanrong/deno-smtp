@@ -1,6 +1,7 @@
 export interface ConnectConfig {
   host: string;
   port?: number;
+  secure?: boolean
   username: string;
   password: string;
 }
