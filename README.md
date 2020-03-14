@@ -8,12 +8,12 @@
 ### Example
 
 ```ts
-import { SmtpClient } from "https://deno.land/x/smtp@v0.3.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
 
 const client = new SmtpClient();
 await client.connect({
   host: "smtp.163.com",
-  port: 25,Ø
+  port: 25,
   username: "username",
   password: "password"
 });
