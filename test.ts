@@ -13,7 +13,7 @@ async function main() {
       password: MAIL_PASS
   }
   if (TLS) {
-    await client.connectTSL(config)
+    await client.connectTLS(config)
   } else {
     await client.connect(config)
   }
