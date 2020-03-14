@@ -1,91 +1,115 @@
-import { CommandCode } from "./code.ts";
-import { ConnectConfig, SendConfig } from "./config.ts";
-import { BufReader, BufWriter } from "./deps.ts";
+import { CommandCode } from "./code.ts"
+import { ConnectConfig, SendConfig } from "./config.ts"
+import { BufReader, BufWriter, TextProtoReader } from "./deps.ts"
 
-const decoder = new TextDecoder();
-const encoder = new TextEncoder();
+const decoder = new TextDecoder()
+const encoder = new TextEncoder()
 
 interface Command {
-  code: string;
-  args: string;
+  code: number
+  args: string
 }
 
 export class SmtpClient {
-  private _conn: Deno.Conn;
-  private _reader: BufReader;
-  private _writer: BufWriter;
+  private _conn: Deno.Conn | null
+  private _reader: TextProtoReader | null
+  private _writer: BufWriter | null
+  
+  constructor() {
+    this._conn = null
+    this._reader = null
+    this._writer = null
+  }
 
   async connect(config: ConnectConfig) {
-    config = { port: 25, ...config };
-    this._conn = await Deno.dial("tcp", `${config.host}:${config.port}`);
-    this._reader = new BufReader(this._conn);
-    this._writer = new BufWriter(this._conn);
-    let cmd = await this.readCmd();
-    this.assertCode(cmd, CommandCode.READY);
+    const conn = await Deno.connect({
+      hostname: config.hostname,
+      port: config.port || 25
+    })
+    await this._connect(conn, config)
+  }
 
-    await this.writeCmd("EHLO", config.host);
+  async connectTSL(config: ConnectConfig) {
+    const conn = await Deno.connectTLS({
+      hostname: config.hostname,
+      port: config.port || 465
+    })
+    await this._connect(conn, config)
+  }
+
+  async close() {
+    if (!this._conn) { return }
+    await this._conn.close()
+  }
+
+  async send(config: SendConfig) {
+    await this.writeCmd("MAIL", "FROM:", `<${config.from}>`)
+    this.assertCode(await this.readCmd(), CommandCode.OK)
+    await this.writeCmd("RCPT", "TO:", `<${config.to}>`)
+    this.assertCode(await this.readCmd(), CommandCode.OK)
+    await this.writeCmd("DATA")
+    this.assertCode(await this.readCmd(), CommandCode.BEGIN_DATA)
+
+    await this.writeCmd("Subject: ", config.subject)
+    await this.writeCmd("From: ", config.from)
+    await this.writeCmd("To: ", `<${config.from}>`)
+    await this.writeCmd("Date: ", new Date().toString())
+
+    await this.writeCmd("MIME-Version: 1.0")
+    await this.writeCmd("Content-Type: text/html;charset=utf-8")
+    await this.writeCmd("Content-Transfer-Encoding: quoted-printable")
+    await this.writeCmd(config.content, "\r\n.\r\n")
+    
+    this.assertCode(await this.readCmd(), CommandCode.OK)
+  }
+
+  private async _connect(conn: Deno.Conn, config: ConnectConfig) {
+    this._conn = conn
+    const reader = new BufReader(this._conn)
+    this._writer = new BufWriter(this._conn)
+    this._reader = new TextProtoReader(reader)
+
+    this.assertCode(await this.readCmd(), CommandCode.READY)
+
+    await this.writeCmd("EHLO", config.hostname)
     while (true) {
-      const cmd = await this.readCmd();
-      if (!cmd.args.startsWith("-")) break;
+      const cmd = await this.readCmd()
+      if (!cmd || !cmd.args.startsWith("-")) break
     }
-    await this.writeCmd("AUTH", "LOGIN");
-    await this.readCmd();
-    await this.writeCmd(btoa(config.username));
-    await this.readCmd();
-    await this.writeCmd(btoa(config.password));
-
-    this.assertCode(await this.readCmd(), CommandCode.AUTHO_SUCCESS);
+    await this.writeCmd("AUTH", "LOGIN")
+    await this.readCmd()
+    
+    await this.writeCmd(btoa(config.username))
+    await this.readCmd()
+    
+    await this.writeCmd(btoa(config.password))
+    this.assertCode(await this.readCmd(), CommandCode.AUTHO_SUCCESS)
+    
   }
 
-  public async send(config: SendConfig) {
-    await this.writeCmd("MAIL", "FROM:", `<${config.from}>`);
-    this.assertCode(await this.readCmd(), CommandCode.OK);
-    await this.writeCmd("RCPT", "TO:", `<${config.to}>`);
-    this.assertCode(await this.readCmd(), CommandCode.OK);
-    await this.writeCmd("DATA");
-    this.assertCode(await this.readCmd(), CommandCode.BEGIN_DATA);
-
-    await this.writeCmd("Subject: ", config.subject);
-    await this.writeCmd("From: ", config.from);
-    await this.writeCmd("To: ", `<${config.from}>`);
-    await this.writeCmd("Date: ", new Date().toString());
-
-    await this.writeCmd("MIME-Version: 1.0");
-    await this.writeCmd("Content-Type: text/html;charset=utf-8");
-    await this.writeCmd("Content-Transfer-Encoding: quoted-printable");
-
-    await this.writeCmd(config.content, "\r\n.\r\n");
-    this.assertCode(await this.readCmd(), CommandCode.OK);
-  }
-
-  public async close() {
-    await this._conn.close();
-  }
-
-  private assertCode(cmd: Command, code: string, msg?: string) {
+  private assertCode(cmd: Command | null, code: number, msg?: string) {
+    if (!cmd) { throw new Error(`invalid cmd`) }
     if (cmd.code !== code) {
-      throw new Error(msg || cmd.code + ": " + cmd.args);
+      throw new Error(msg || cmd.code + ": " + cmd.args)
     }
-    // console.log("Read:", cmd);
   }
 
-  private async readCmd(): Promise<Command> {
-    const result = await this._reader.readLine();
-    if (result === Deno.EOF) return null;
-    const line = decoder.decode(result.line);
-    const cmdCode = line.slice(0, 3).trim();
-    const cmdArgs = line.slice(3).trim();
-    // console.log("r", line, cmdCode, cmdArgs);
+  private async readCmd(): Promise<Command | null> {
+    if (!this._reader) { return null }
+    const result = await this._reader.readLine()
+    if (result === Deno.EOF) return null
+    const cmdCode = parseInt(result.slice(0, 3).trim())
+    const cmdArgs = result.slice(3).trim()
     return {
       code: cmdCode,
       args: cmdArgs
-    };
+    }
   }
 
   private async writeCmd(...args: string[]) {
-    // console.log("Write:", ...args);
-    const data = encoder.encode([...args].join(" ") + "\r\n");
-    await this._writer.write(data);
-    await this._writer.flush();
+    if (!this._writer) { return null }
+    const data = encoder.encode([...args].join(" ") + "\r\n")
+    await this._writer.write(data)
+    await this._writer.flush()
   }
 }
