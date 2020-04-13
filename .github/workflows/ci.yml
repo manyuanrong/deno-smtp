@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Deno
+        uses: denolib/setup-deno@master
+        with:
+          deno-version: 0.40.0
+
+      - name: Test
+        env:
+          HOSTNAME: smtp.163.com
+          MAIL_USER: ${{ screts.MAIL_USER }}
+          MAIL_PASS: ${{ screts.MAIL_PASS }}
+          MAIL_TO_USER: ${{ screts.MAIL_USER }}
+        run: deno run --allow-net ./test.ts
