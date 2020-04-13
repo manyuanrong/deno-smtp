@@ -1,13 +1,13 @@
 export interface ConnectConfig {
-  host: string;
-  port?: number;
-  username: string;
-  password: string;
+  hostname: string
+  port?: number
+  username: string
+  password: string
 }
 
 export interface SendConfig {
-  to: string;
-  from: string;
-  subject: string;
-  content: string;
+  to: string
+  from: string
+  subject: string
+  content: string
 }

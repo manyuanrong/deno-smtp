@@ -1,2 +1,2 @@
-export { ConnectConfig, SendConfig } from "./config.ts";
-export { SmtpClient } from "./smtp.ts";
+export { ConnectConfig, SendConfig } from "./config.ts"
+export { SmtpClient } from "./smtp.ts"

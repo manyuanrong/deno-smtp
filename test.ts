@@ -1,20 +1,26 @@
-import { SmtpClient } from "./smtp.ts";
+import { SmtpClient } from "./smtp.ts"
 
-const env = Deno.env();
-const { MAIL_USER, MAIL_PASS } = env;
+const env = Deno.env()
+const { TLS, PORT, HOSTNAME, MAIL_USER, MAIL_PASS } = env
+console.log({ TLS, PORT, HOSTNAME, MAIL_USER, MAIL_PASS })
 
 async function main() {
-  const client = new SmtpClient();
-  await client.connect({
-    host: "mail.smtp2go.com",
-    port: 2525,
-    username: MAIL_USER,
-    password: MAIL_PASS
-  });
+  const client = new SmtpClient()
+  const config = {
+      hostname: HOSTNAME,
+      port: PORT ? parseInt(PORT) : undefined,
+      username: MAIL_USER,
+      password: MAIL_PASS
+  }
+  if (TLS) {
+    await client.connectTLS(config)
+  } else {
+    await client.connect(config)
+  }
 
   await client.send({
-    from: "system@link.denochina.com",
-    to: "416828041@qq.com",
+    from: MAIL_USER,
+    to: MAIL_USER,
     subject: "Deno Smtp build Success" + Math.random() * 1000,
     content: `
 <!DOCTYPE html>
@@ -32,9 +38,9 @@ async function main() {
       </body>
     </html>
 `
-  });
+  })
 
-  await client.close();
+  await client.close()
 }
 
-main();
+main()
