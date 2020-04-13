@@ -20,7 +20,7 @@ jobs:
       - name: Test
         env:
           HOSTNAME: smtp.163.com
-          MAIL_USER: ${{ screts.MAIL_USER }}
-          MAIL_PASS: ${{ screts.MAIL_PASS }}
-          MAIL_TO_USER: ${{ screts.MAIL_USER }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          MAIL_TO_USER: ${{ secrets.MAIL_USER }}
         run: deno run --allow-net ./test.ts
