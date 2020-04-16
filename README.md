@@ -39,3 +39,23 @@ await client.connectTLS({
   password: "password",
 });
 ```
+
+#### Use in Gmail
+```ts
+await client.connect({
+  tls: true,
+  host: "smtp.gamil.com",
+  port: 465,
+  username: "your username",
+  password: "your password",
+});
+
+await client.send({
+  from: "someone@163.com", // Your Email address
+  to: "someone@xx.com", // Email address of the destination
+  subject: "Mail Title",
+  content: "Mail Content，maybe HTML",
+});
+
+await client.close();
+```
