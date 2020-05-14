@@ -48,16 +48,19 @@ export class SmtpClient {
   }
 
   async send(config: SendConfig) {
-    await this.writeCmd("MAIL", "FROM:", `<${config.from}>`);
+    const [from, fromData] = this.parseAddress(config.from);
+    const [to, toData] = this.parseAddress(config.to);
+
+    await this.writeCmd("MAIL", "FROM:", from);
     this.assertCode(await this.readCmd(), CommandCode.OK);
-    await this.writeCmd("RCPT", "TO:", `<${config.to}>`);
+    await this.writeCmd("RCPT", "TO:", to);
     this.assertCode(await this.readCmd(), CommandCode.OK);
     await this.writeCmd("DATA");
     this.assertCode(await this.readCmd(), CommandCode.BEGIN_DATA);
 
     await this.writeCmd("Subject: ", config.subject);
-    await this.writeCmd("From: ", config.from);
-    await this.writeCmd("To: ", `<${config.to}>`);
+    await this.writeCmd("From: ", fromData);
+    await this.writeCmd("To: ", toData);
     await this.writeCmd("Date: ", new Date().toString());
 
     await this.writeCmd("MIME-Version: 1.0");
@@ -130,5 +133,12 @@ export class SmtpClient {
     config: ConnectConfig | ConnectConfigWithAuthentication,
   ): config is ConnectConfigWithAuthentication {
     return (config as ConnectConfigWithAuthentication).username !== undefined;
+  }
+
+  private parseAddress(email: string): [string, string] {
+    const m = email.match(/(.*)\s<(.*)>/);
+    return m?.length === 3
+      ? [`<${m[2]}>`, email]
+      : [`<${email}>`, `<${email}>`];
   }
 }
