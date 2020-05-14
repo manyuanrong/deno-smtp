@@ -1,5 +1,9 @@
 import { CommandCode } from "./code.ts";
-import { ConnectConfig, SendConfig } from "./config.ts";
+import {
+  ConnectConfig,
+  ConnectConfigWithAuthentication,
+  SendConfig,
+} from "./config.ts";
 import { BufReader, BufWriter, TextProtoReader } from "./deps.ts";
 
 const encoder = new TextEncoder();
@@ -77,14 +81,17 @@ export class SmtpClient {
       const cmd = await this.readCmd();
       if (!cmd || !cmd.args.startsWith("-")) break;
     }
-    await this.writeCmd("AUTH", "LOGIN");
-    this.assertCode(await this.readCmd(), 334);
 
-    await this.writeCmd(btoa(config.username));
-    this.assertCode(await this.readCmd(), 334);
+    if (this.useAuthentication(config)) {
+      await this.writeCmd("AUTH", "LOGIN");
+      this.assertCode(await this.readCmd(), 334);
 
-    await this.writeCmd(btoa(config.password));
-    this.assertCode(await this.readCmd(), CommandCode.AUTHO_SUCCESS);
+      await this.writeCmd(btoa(config.username));
+      this.assertCode(await this.readCmd(), 334);
+
+      await this.writeCmd(btoa(config.password));
+      this.assertCode(await this.readCmd(), CommandCode.AUTHO_SUCCESS);
+    }
   }
 
   private assertCode(cmd: Command | null, code: number, msg?: string) {
@@ -117,5 +124,11 @@ export class SmtpClient {
     const data = encoder.encode([...args].join(" ") + "\r\n");
     await this._writer.write(data);
     await this._writer.flush();
+  }
+
+  private useAuthentication(
+    config: ConnectConfig | ConnectConfigWithAuthentication,
+  ): config is ConnectConfigWithAuthentication {
+    return (config as ConnectConfigWithAuthentication).username !== undefined;
   }
 }
