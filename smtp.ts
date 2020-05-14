@@ -57,7 +57,7 @@ export class SmtpClient {
 
     await this.writeCmd("Subject: ", config.subject);
     await this.writeCmd("From: ", config.from);
-    await this.writeCmd("To: ", `<${config.from}>`);
+    await this.writeCmd("To: ", `<${config.to}>`);
     await this.writeCmd("Date: ", new Date().toString());
 
     await this.writeCmd("MIME-Version: 1.0");
