@@ -2,7 +2,6 @@ import { CommandCode } from "./code.ts";
 import { ConnectConfig, SendConfig } from "./config.ts";
 import { BufReader, BufWriter, TextProtoReader } from "./deps.ts";
 
-const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 interface Command {
@@ -30,7 +29,7 @@ export class SmtpClient {
   }
 
   async connectTLS(config: ConnectConfig) {
-    const conn = await Deno.connectTLS({
+    const conn = await Deno.connectTls({
       hostname: config.hostname,
       port: config.port || 465,
     });
@@ -102,7 +101,7 @@ export class SmtpClient {
       return null;
     }
     const result = await this._reader.readLine();
-    if (result === Deno.EOF) return null;
+    if (result === null) return null;
     const cmdCode = parseInt(result.slice(0, 3).trim());
     const cmdArgs = result.slice(3).trim();
     return {
