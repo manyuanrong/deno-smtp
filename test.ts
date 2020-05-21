@@ -3,25 +3,24 @@ import { SmtpClient } from "./smtp.ts";
 const env = Deno.env.toObject();
 const { TLS, PORT, HOSTNAME, MAIL_USER, MAIL_TO_USER, MAIL_PASS } = env;
 
-async function main() {
-  const client = new SmtpClient();
-  const config = {
-    hostname: HOSTNAME,
-    port: PORT ? parseInt(PORT) : undefined,
-    username: MAIL_USER,
-    password: MAIL_PASS,
-  };
-  if (TLS) {
-    await client.connectTLS(config);
-  } else {
-    await client.connect(config);
-  }
+const client = new SmtpClient();
+const config = {
+  hostname: HOSTNAME,
+  port: PORT ? parseInt(PORT) : undefined,
+  username: MAIL_USER,
+  password: MAIL_PASS,
+};
+if (TLS) {
+  await client.connectTLS(config);
+} else {
+  await client.connect(config);
+}
 
-  await client.send({
-    from: MAIL_USER,
-    to: MAIL_TO_USER,
-    subject: "Deno Smtp build Success" + Math.random() * 1000,
-    content: `
+await client.send({
+  from: MAIL_USER,
+  to: MAIL_TO_USER,
+  subject: "Deno Smtp build Success" + Math.random() * 1000,
+  content: `
   <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -37,9 +36,6 @@ async function main() {
         </body>
       </html>
   `,
-  });
+});
 
-  await client.close();
-}
-
-main();
+await client.close();

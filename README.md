@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/manyuanrong/deno-smtp/workflows/ci/badge.svg?branch=master)](https://github.com/manyuanrong/deno-smtp/actions)
 ![GitHub](https://img.shields.io/github/license/manyuanrong/deno-smtp.svg)
 ![GitHub release](https://img.shields.io/github/release/manyuanrong/deno-smtp.svg)
-![(Deno)](https://img.shields.io/badge/deno-0.40.0-green.svg)
+![(Deno)](https://img.shields.io/badge/deno-1.0.0-green.svg)
 
 ### Example
 
@@ -41,6 +41,7 @@ await client.connectTLS({
 ```
 
 #### Use in Gmail
+
 ```ts
 await client.connect({
   tls: true,
