@@ -1,5 +1,9 @@
 import { CommandCode } from "./code.ts";
-import { ConnectConfig, SendConfig } from "./config.ts";
+import {
+  ConnectConfig,
+  ConnectConfigWithAuthentication,
+  SendConfig,
+} from "./config.ts";
 import { BufReader, BufWriter, TextProtoReader } from "./deps.ts";
 
 const encoder = new TextEncoder();
@@ -44,16 +48,19 @@ export class SmtpClient {
   }
 
   async send(config: SendConfig) {
-    await this.writeCmd("MAIL", "FROM:", `<${config.from}>`);
+    const [from, fromData] = this.parseAddress(config.from);
+    const [to, toData] = this.parseAddress(config.to);
+
+    await this.writeCmd("MAIL", "FROM:", from);
     this.assertCode(await this.readCmd(), CommandCode.OK);
-    await this.writeCmd("RCPT", "TO:", `<${config.to}>`);
+    await this.writeCmd("RCPT", "TO:", to);
     this.assertCode(await this.readCmd(), CommandCode.OK);
     await this.writeCmd("DATA");
     this.assertCode(await this.readCmd(), CommandCode.BEGIN_DATA);
 
     await this.writeCmd("Subject: ", config.subject);
-    await this.writeCmd("From: ", config.from);
-    await this.writeCmd("To: ", `<${config.from}>`);
+    await this.writeCmd("From: ", fromData);
+    await this.writeCmd("To: ", toData);
     await this.writeCmd("Date: ", new Date().toString());
 
     await this.writeCmd("MIME-Version: 1.0");
@@ -77,14 +84,17 @@ export class SmtpClient {
       const cmd = await this.readCmd();
       if (!cmd || !cmd.args.startsWith("-")) break;
     }
-    await this.writeCmd("AUTH", "LOGIN");
-    this.assertCode(await this.readCmd(), 334);
 
-    await this.writeCmd(btoa(config.username));
-    this.assertCode(await this.readCmd(), 334);
+    if (this.useAuthentication(config)) {
+      await this.writeCmd("AUTH", "LOGIN");
+      this.assertCode(await this.readCmd(), 334);
 
-    await this.writeCmd(btoa(config.password));
-    this.assertCode(await this.readCmd(), CommandCode.AUTHO_SUCCESS);
+      await this.writeCmd(btoa(config.username));
+      this.assertCode(await this.readCmd(), 334);
+
+      await this.writeCmd(btoa(config.password));
+      this.assertCode(await this.readCmd(), CommandCode.AUTHO_SUCCESS);
+    }
   }
 
   private assertCode(cmd: Command | null, code: number, msg?: string) {
@@ -117,5 +127,18 @@ export class SmtpClient {
     const data = encoder.encode([...args].join(" ") + "\r\n");
     await this._writer.write(data);
     await this._writer.flush();
+  }
+
+  private useAuthentication(
+    config: ConnectConfig | ConnectConfigWithAuthentication,
+  ): config is ConnectConfigWithAuthentication {
+    return (config as ConnectConfigWithAuthentication).username !== undefined;
+  }
+
+  private parseAddress(email: string): [string, string] {
+    const m = email.match(/(.*)\s<(.*)>/);
+    return m?.length === 3
+      ? [`<${m[2]}>`, email]
+      : [`<${email}>`, `<${email}>`];
   }
 }

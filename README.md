@@ -43,9 +43,8 @@ await client.connectTLS({
 #### Use in Gmail
 
 ```ts
-await client.connect({
-  tls: true,
-  host: "smtp.gamil.com",
+await client.connectTLS({
+  host: "smtp.gmail.com",
   port: 465,
   username: "your username",
   password: "your password",
