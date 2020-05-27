@@ -3,10 +3,10 @@ export interface ConnectConfig {
   port?: number;
 }
 
-export type ConnectConfigWithAuthentication = ConnectConfig & {
+export interface ConnectConfigWithAuthentication extends ConnectConfig {
   username: string;
   password: string;
-};
+}
 
 export interface SendConfig {
   to: string;
