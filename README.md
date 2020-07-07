@@ -7,13 +7,37 @@
 
 ### Example
 
+#### Use without authentication
 ```ts
 import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
 
 const client = new SmtpClient();
 
 await client.connect({
-  host: "smtp.163.com",
+  hostname: "smtp.163.com",
+  port: 25,
+});
+
+await client.send({
+  from: "mailaddress@163.com",
+  to: "to-address@xx.com",
+  subject: "Mail Title",
+  content: "Mail Content，maybe HTML",
+});
+
+await client.close();
+```
+
+#### Use with authentication
+
+```ts
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+import { ConnectConfigWithAuthentication } from "https://deno.land/x/smtp/config.ts";
+
+const client = new SmtpClient();
+
+await client.connect(<ConnectConfigWithAuthentication>{
+  hostname: "smtp.163.com",
   port: 25,
   username: "username",
   password: "password",
@@ -29,22 +53,32 @@ await client.send({
 await client.close();
 ```
 
-#### TLS connection
+#### TLS connection with authentication
 
 ```ts
-await client.connectTLS({
-  host: "smtp.163.com",
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+import { ConnectConfigWithAuthentication } from "https://deno.land/x/smtp/config.ts";
+
+const client = new SmtpClient();
+
+await client.connectTLS(<ConnectConfigWithAuthentication>{
+  hostname: "smtp.163.com",
   port: 465,
   username: "username",
   password: "password",
 });
 ```
 
-#### Use in Gmail
+#### Use in Gmail with authentication
 
 ```ts
-await client.connectTLS({
-  host: "smtp.gmail.com",
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+import { ConnectConfigWithAuthentication } from "https://deno.land/x/smtp/config.ts";
+
+const client = new SmtpClient();
+
+await client.connectTLS(<ConnectConfigWithAuthentication>{
+  hostname: "smtp.gmail.com",
   port: 465,
   username: "your username",
   password: "your password",
