@@ -13,7 +13,7 @@ import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
 const client = new SmtpClient();
 
 await client.connect({
-  host: "smtp.163.com",
+  hostname: "smtp.163.com",
   port: 25,
   username: "username",
   password: "password",
@@ -33,7 +33,7 @@ await client.close();
 
 ```ts
 await client.connectTLS({
-  host: "smtp.163.com",
+  hostname: "smtp.163.com",
   port: 465,
   username: "username",
   password: "password",
@@ -44,7 +44,7 @@ await client.connectTLS({
 
 ```ts
 await client.connectTLS({
-  host: "smtp.gmail.com",
+  hostname: "smtp.gmail.com",
   port: 465,
   username: "your username",
   password: "your password",

@@ -1,7 +1,8 @@
 import { SmtpClient } from "./smtp.ts";
 
-const env = Deno.env.toObject();
-const { TLS, PORT, HOSTNAME, MAIL_USER, MAIL_TO_USER, MAIL_PASS } = env;
+const { TLS, PORT, HOSTNAME, MAIL_USER, MAIL_TO_USER, MAIL_PASS } = Deno
+  .env
+  .toObject();
 
 const client = new SmtpClient();
 const config = {
