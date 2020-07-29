@@ -136,7 +136,7 @@ export class SmtpClient {
   }
 
   private parseAddress(email: string): [string, string] {
-    const m = email.match(/(.*)\s<(.*)>/);
+    const m = email.toString().match(/(.*)\s<(.*)>/);
     return m?.length === 3
       ? [`<${m[2]}>`, email]
       : [`<${email}>`, `<${email}>`];
