@@ -52,7 +52,7 @@ export class SmtpClient {
     this._content_encoding = _content_encoding as ContentTransferEncoding;
   }
 
-  async connect(config: ConnectConfig) {
+  async connect(config: ConnectConfig | ConnectConfigWithAuthentication) {
     const conn = await Deno.connect({
       hostname: config.hostname,
       port: config.port || 25,
@@ -60,7 +60,7 @@ export class SmtpClient {
     await this._connect(conn, config);
   }
 
-  async connectTLS(config: ConnectConfig) {
+  async connectTLS(config: ConnectConfig | ConnectConfigWithAuthentication) {
     const conn = await Deno.connectTls({
       hostname: config.hostname,
       port: config.port || 465,
@@ -158,13 +158,13 @@ export class SmtpClient {
   }
 
   private useAuthentication(
-    config: ConnectConfig | ConnectConfigWithAuthentication,
+    config: ConnectConfig | ConnectConfigWithAuthentication
   ): config is ConnectConfigWithAuthentication {
     return (config as ConnectConfigWithAuthentication).username !== undefined;
   }
 
   private parseAddress(email: string): [string, string] {
-    const m = email.match(/(.*)\s<(.*)>/);
+    const m = email.toString().match(/(.*)\s<(.*)>/);
     return m?.length === 3
       ? [`<${m[2]}>`, email]
       : [`<${email}>`, `<${email}>`];
