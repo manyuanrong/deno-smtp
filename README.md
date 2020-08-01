@@ -59,3 +59,16 @@ await client.send({
 
 await client.close();
 ```
+
+### Configuring your client
+
+You can pass options to your client through the `SmtpClient` constructor.
+
+```ts
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+
+//Defaults
+const client = new SmtpClient({
+  content_encoding: "quoted-printable", // 7bit, 8bit, base64, binary, quoted-printable
+});
+```

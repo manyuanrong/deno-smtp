@@ -13,15 +13,43 @@ interface Command {
   args: string;
 }
 
+enum ContentTransferEncoding {
+  "7bit" = "7bit",
+  "8bit" = "8bit",
+  "base64" = "base64",
+  "binary" = "binary",
+  "quoted-printable" = "quoted-printable",
+}
+
+interface SmtpClientOptions {
+  content_encoding?:
+    | "7bit"
+    | "8bit"
+    | "base64"
+    | "binary"
+    | "quoted-printable";
+}
+
 export class SmtpClient {
   private _conn: Deno.Conn | null;
   private _reader: TextProtoReader | null;
   private _writer: BufWriter | null;
+  private _content_encoding: ContentTransferEncoding;
 
-  constructor() {
+  constructor({
+    content_encoding = ContentTransferEncoding["quoted-printable"],
+  }: SmtpClientOptions = {}) {
     this._conn = null;
     this._reader = null;
     this._writer = null;
+
+    const _content_encoding = String(content_encoding).toLowerCase();
+    if (!(_content_encoding in ContentTransferEncoding)) {
+      throw new Error(
+        `${JSON.stringify(content_encoding)} is not a valid content encoding`,
+      );
+    }
+    this._content_encoding = _content_encoding as ContentTransferEncoding;
   }
 
   async connect(config: ConnectConfig | ConnectConfigWithAuthentication) {
@@ -65,7 +93,7 @@ export class SmtpClient {
 
     await this.writeCmd("MIME-Version: 1.0");
     await this.writeCmd("Content-Type: text/html;charset=utf-8");
-    await this.writeCmd("Content-Transfer-Encoding: 7bit");
+    await this.writeCmd(`Content-Transfer-Encoding: ${this._content_encoding}`);
     await this.writeCmd(config.content, "\r\n.\r\n");
 
     this.assertCode(await this.readCmd(), CommandCode.OK);
