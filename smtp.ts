@@ -1,5 +1,5 @@
 import { CommandCode } from "./code.ts";
-import {
+import type {
   ConnectConfig,
   ConnectConfigWithAuthentication,
   SendConfig,
