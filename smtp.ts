@@ -158,7 +158,7 @@ export class SmtpClient {
   }
 
   private useAuthentication(
-    config: ConnectConfig | ConnectConfigWithAuthentication
+    config: ConnectConfig | ConnectConfigWithAuthentication,
   ): config is ConnectConfigWithAuthentication {
     return (config as ConnectConfigWithAuthentication).username !== undefined;
   }
