@@ -93,7 +93,7 @@ export class SmtpClient {
 
     await this.writeCmd("MIME-Version: 1.0");
     await this.writeCmd("Content-Type: text/html;charset=utf-8");
-    await this.writeCmd(`Content-Transfer-Encoding: ${this._content_encoding}`);
+    await this.writeCmd(`Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n");
     await this.writeCmd(config.content, "\r\n.\r\n");
 
     this.assertCode(await this.readCmd(), CommandCode.OK);
