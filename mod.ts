@@ -3,4 +3,4 @@ export type {
     ConnectConfigWithAuthentication,
     SendConfig,
 } from './config.ts'
-export { SmtpClient } from './smtp.ts'
+export { SmtpClient } from "./smtp.ts";
