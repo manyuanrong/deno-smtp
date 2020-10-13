@@ -1,16 +1,18 @@
-export interface ConnectConfig {
+interface ConnectConfig {
   hostname: string;
   port?: number;
 }
 
-export interface ConnectConfigWithAuthentication extends ConnectConfig {
+interface ConnectConfigWithAuthentication extends ConnectConfig {
   username: string;
   password: string;
 }
 
-export interface SendConfig {
+interface SendConfig {
   to: string;
   from: string;
   subject: string;
   content: string;
 }
+
+export type { ConnectConfigWithAuthentication, ConnectConfig, SendConfig }

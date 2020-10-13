@@ -1,6 +1,6 @@
 export type {
-  ConnectConfig,
-  ConnectConfigWithAuthentication,
-  SendConfig,
-} from "./config.ts";
+    ConnectConfig,
+    ConnectConfigWithAuthentication,
+    SendConfig,
+} from './config.ts'
 export { SmtpClient } from "./smtp.ts";
