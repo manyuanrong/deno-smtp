@@ -21,7 +21,8 @@ await client.send({
   from: MAIL_USER,
   to: MAIL_TO_USER,
   subject: "Deno Smtp build Success" + Math.random() * 1000,
-  content: `
+  content: "plain text email",
+  html: `
   <!DOCTYPE html>
       <html lang="en">
         <head>

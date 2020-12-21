@@ -2,7 +2,7 @@ import { CommandCode } from "./code.ts";
 import type {
   ConnectConfig,
   ConnectConfigWithAuthentication,
-  SendConfig,
+  SendConfig
 } from "./config.ts";
 import { BufReader, BufWriter, TextProtoReader } from "./deps.ts";
 
@@ -91,10 +91,20 @@ export class SmtpClient {
     await this.writeCmd("To: ", toData);
     await this.writeCmd("Date: ", new Date().toString());
 
-    await this.writeCmd("MIME-Version: 1.0");
-    await this.writeCmd("Content-Type: text/html;charset=utf-8");
-    await this.writeCmd(`Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n");
-    await this.writeCmd(config.content, "\r\n.\r\n");
+    if(config.html) {
+      await this.writeCmd("Content-Type: multipart/alternative; boundary=AlternativeBoundary", "\r\n");
+      await this.writeCmd("--AlternativeBoundary");
+      await this.writeCmd('Content-Type: text/plain; charset="utf-8"', "\r\n");
+      await this.writeCmd(config.content, "\r\n");
+      await this.writeCmd("--AlternativeBoundary");
+      await this.writeCmd('Content-Type: text/html; charset="utf-8"', "\r\n");
+      await this.writeCmd(config.html, "\r\n.\r\n");
+    } else {
+      await this.writeCmd("MIME-Version: 1.0");
+      await this.writeCmd("Content-Type: text/html;charset=utf-8");
+      await this.writeCmd(`Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n");
+      await this.writeCmd(config.content, "\r\n.\r\n");
+    }
 
     this.assertCode(await this.readCmd(), CommandCode.OK);
   }
