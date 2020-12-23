@@ -23,7 +23,8 @@ await client.send({
   from: "mailaddress@163.com",
   to: "to-address@xx.com",
   subject: "Mail Title",
-  content: "Mail Content，maybe HTML",
+  content: "Mail Content",
+  html: "<a href='https://github.com'>Github</a>",
 });
 
 await client.close();
