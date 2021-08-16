@@ -15,7 +15,7 @@ jobs:
       - name: Install Deno
         uses: denolib/setup-deno@master
         with:
-          deno-version: 1.6.1
+          deno-version: 1.13.x
 
       - name: Test
         env:
