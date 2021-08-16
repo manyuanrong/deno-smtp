@@ -2,7 +2,7 @@ import { CommandCode } from "./code.ts";
 import type {
   ConnectConfig,
   ConnectConfigWithAuthentication,
-  SendConfig
+  SendConfig,
 } from "./config.ts";
 import { BufReader, BufWriter, TextProtoReader } from "./deps.ts";
 
@@ -22,12 +22,7 @@ enum ContentTransferEncoding {
 }
 
 interface SmtpClientOptions {
-  content_encoding?:
-    | "7bit"
-    | "8bit"
-    | "base64"
-    | "binary"
-    | "quoted-printable";
+  content_encoding?: "7bit" | "8bit" | "base64" | "binary" | "quoted-printable";
 }
 
 export class SmtpClient {
@@ -91,8 +86,11 @@ export class SmtpClient {
     await this.writeCmd("To: ", toData);
     await this.writeCmd("Date: ", new Date().toString());
 
-    if(config.html) {
-      await this.writeCmd("Content-Type: multipart/alternative; boundary=AlternativeBoundary", "\r\n");
+    if (config.html) {
+      await this.writeCmd(
+        "Content-Type: multipart/alternative; boundary=AlternativeBoundary",
+        "\r\n",
+      );
       await this.writeCmd("--AlternativeBoundary");
       await this.writeCmd('Content-Type: text/plain; charset="utf-8"', "\r\n");
       await this.writeCmd(config.content, "\r\n");
@@ -102,7 +100,9 @@ export class SmtpClient {
     } else {
       await this.writeCmd("MIME-Version: 1.0");
       await this.writeCmd("Content-Type: text/plain;charset=utf-8");
-      await this.writeCmd(`Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n");
+      await this.writeCmd(
+        `Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n",
+      );
       await this.writeCmd(config.content, "\r\n.\r\n");
     }
 
@@ -162,6 +162,7 @@ export class SmtpClient {
     if (!this._writer) {
       return null;
     }
+    console.table(args);
     const data = encoder.encode([...args].join(" ") + "\r\n");
     await this._writer.write(data);
     await this._writer.flush();

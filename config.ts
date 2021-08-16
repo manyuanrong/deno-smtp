@@ -16,4 +16,4 @@ interface SendConfig {
   html?: string;
 }
 
-export type { ConnectConfigWithAuthentication, ConnectConfig, SendConfig };
+export type { ConnectConfig, ConnectConfigWithAuthentication, SendConfig };
