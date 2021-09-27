@@ -11,6 +11,7 @@ interface ConnectConfigWithAuthentication extends ConnectConfig {
 interface SendConfig {
   to: string;
   from: string;
+  date?: string;
   subject: string;
   content: string;
   html?: string;

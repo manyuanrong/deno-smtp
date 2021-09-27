@@ -73,6 +73,7 @@ export class SmtpClient {
   async send(config: SendConfig) {
     const [from, fromData] = this.parseAddress(config.from);
     const [to, toData] = this.parseAddress(config.to);
+    const date = config.date ?? new Date().toString();
 
     await this.writeCmd("MAIL", "FROM:", from);
     this.assertCode(await this.readCmd(), CommandCode.OK);
@@ -84,7 +85,7 @@ export class SmtpClient {
     await this.writeCmd("Subject: ", config.subject);
     await this.writeCmd("From: ", fromData);
     await this.writeCmd("To: ", toData);
-    await this.writeCmd("Date: ", new Date().toString());
+    await this.writeCmd("Date: ", date);
 
     if (config.html) {
       await this.writeCmd(
