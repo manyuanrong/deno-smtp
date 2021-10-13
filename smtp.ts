@@ -23,20 +23,25 @@ enum ContentTransferEncoding {
 
 interface SmtpClientOptions {
   content_encoding?: "7bit" | "8bit" | "base64" | "binary" | "quoted-printable";
+  console_debug?: boolean;
 }
 
 export class SmtpClient {
   private _conn: Deno.Conn | null;
   private _reader: TextProtoReader | null;
   private _writer: BufWriter | null;
+
+  private _console_debug = false;
   private _content_encoding: ContentTransferEncoding;
 
   constructor({
     content_encoding = ContentTransferEncoding["quoted-printable"],
+    console_debug = false,
   }: SmtpClientOptions = {}) {
     this._conn = null;
     this._reader = null;
     this._writer = null;
+    this._console_debug = console_debug;
 
     const _content_encoding = String(content_encoding).toLowerCase();
     if (!(_content_encoding in ContentTransferEncoding)) {
@@ -163,7 +168,11 @@ export class SmtpClient {
     if (!this._writer) {
       return null;
     }
-    console.table(args);
+
+    if (this._console_debug) {
+      console.table(args);
+    }
+
     const data = encoder.encode([...args].join(" ") + "\r\n");
     await this._writer.write(data);
     await this._writer.flush();
