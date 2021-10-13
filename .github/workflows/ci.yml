@@ -23,4 +23,4 @@ jobs:
           MAIL_USER: ${{ secrets.MAIL_USER }}
           MAIL_PASS: ${{ secrets.MAIL_PASS }}
           MAIL_TO_USER: ${{ secrets.MAIL_USER }}
-        run: deno run --allow-net --allow-env ./test.ts
+        run: deno run --allow-net --allow-env --allow-read ./test.ts
