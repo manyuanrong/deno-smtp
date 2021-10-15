@@ -92,14 +92,18 @@ export class SmtpClient {
     await this.writeCmd("To: ", toData);
     await this.writeCmd("Date: ", date);
 
-    if (config.html) {
+    if ("html" in config) {
       await this.writeCmd(
         "Content-Type: multipart/alternative; boundary=AlternativeBoundary",
         "\r\n",
       );
+
+      const content = "content" in config ? config.content : "Please use a mail client that supports HTML";
+      
       await this.writeCmd("--AlternativeBoundary");
       await this.writeCmd('Content-Type: text/plain; charset="utf-8"', "\r\n");
-      await this.writeCmd(config.content, "\r\n");
+      await this.writeCmd(content, "\r\n");
+
       await this.writeCmd("--AlternativeBoundary");
       await this.writeCmd('Content-Type: text/html; charset="utf-8"', "\r\n");
       await this.writeCmd(config.html, "\r\n.\r\n");
