@@ -8,13 +8,26 @@ interface ConnectConfigWithAuthentication extends ConnectConfig {
   password: string;
 }
 
-interface SendConfig {
+interface SendAbstract {
   to: string;
   from: string;
   date?: string;
   subject: string;
-  content: string;
-  html?: string;
 }
+
+interface SendBoth extends SendAbstract {
+  html: string;
+  content: string;
+}
+
+interface SendHtml extends SendAbstract {
+  html: string;
+}
+
+interface SendContent extends SendAbstract {
+  content: string;
+}
+
+type SendConfig = SendBoth | SendHtml | SendContent;
 
 export type { ConnectConfig, ConnectConfigWithAuthentication, SendConfig };
