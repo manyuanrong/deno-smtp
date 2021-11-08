@@ -124,9 +124,31 @@ export class SmtpClient {
     this.assertCode(await this.readCmd(), CommandCode.READY);
 
     await this.writeCmd("EHLO", config.hostname);
+
+    let startTLS = false;
+
     while (true) {
       const cmd = await this.readCmd();
       if (!cmd || !cmd.args.startsWith("-")) break;
+      if (cmd.args == "-STARTTLS") startTLS = true
+    }
+
+    if (startTLS) {
+      await this.writeCmd("STARTTLS")
+      this.assertCode(await this.readCmd(), CommandCode.READY)
+    
+      this._conn = await Deno.startTls(this._conn, { hostname: config.hostname });
+
+      const reader = new BufReader(this._conn);
+      this._writer = new BufWriter(this._conn);
+      this._reader = new TextProtoReader(reader);
+
+      await this.writeCmd("EHLO", config.hostname);
+  
+      while (true) {
+        const cmd = await this.readCmd();
+        if (!cmd || !cmd.args.startsWith("-")) break;
+      }
     }
 
     if (this.useAuthentication(config)) {
