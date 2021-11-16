@@ -15,6 +15,7 @@ interface Attachment {
   data: string;
   charset?: string;
   contentId?: string;
+  contentDisposition?: string;
   xAttachmentId?: string;
 }
 

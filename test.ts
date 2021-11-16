@@ -52,6 +52,7 @@ await client.send({
       contentType: "text/plain",
       charset: "UTF-8",
       fileName: "test.txt",
+      contentDisposition: "attachment",
       encoding: "base64",
       data: `dGVzdCBhdHRhY2htZW50IGNvbnRlbnQK`,
     },

@@ -124,7 +124,7 @@ export class SmtpClient {
       for (const attachment of config.attachments) {
         await this.writeCmd("--MixBoundary");
         await this.writeCmd(`Content-Type: ${attachment.contentType}; ${attachment.charset && `charset: ${attachment.charset};`} name="${attachment.fileName}"`);
-        await this.writeCmd(`Content-Disposition: attachment; filename="${attachment.fileName}"`);
+        await this.writeCmd(`Content-Disposition: ${attachment.contentDisposition}; filename="${attachment.fileName}"`);
         await this.writeCmd(`Content-Transfer-Encoding: ${attachment.encoding}`);
         if (attachment.contentId) {
           await this.writeCmd(`Content-ID: <${attachment.contentId}>`);
