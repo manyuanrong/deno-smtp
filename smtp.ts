@@ -46,7 +46,7 @@ export class SmtpClient {
     const _content_encoding = String(content_encoding).toLowerCase();
     if (!(_content_encoding in ContentTransferEncoding)) {
       throw new Error(
-        `${JSON.stringify(content_encoding)} is not a valid content encoding`,
+        `${JSON.stringify(content_encoding)} is not a valid content encoding`
       );
     }
     this._content_encoding = _content_encoding as ContentTransferEncoding;
@@ -92,25 +92,53 @@ export class SmtpClient {
     await this.writeCmd("To: ", toData);
     await this.writeCmd("Date: ", date);
 
+    if (config.attachments && config.attachments.length > 0) {
+      await this.writeCmd(
+        "Content-Type: multipart/mixed; boundary=MixBoundary",
+        "\r\n"
+      );
+      await this.writeCmd("--MixBoundary");
+    }
+
     if (config.html) {
       await this.writeCmd(
         "Content-Type: multipart/alternative; boundary=AlternativeBoundary",
-        "\r\n",
+        "\r\n"
       );
       await this.writeCmd("--AlternativeBoundary");
       await this.writeCmd('Content-Type: text/plain; charset="utf-8"', "\r\n");
       await this.writeCmd(config.content, "\r\n");
       await this.writeCmd("--AlternativeBoundary");
       await this.writeCmd('Content-Type: text/html; charset="utf-8"', "\r\n");
-      await this.writeCmd(config.html, "\r\n.\r\n");
+      await this.writeCmd(config.html, "\r\n");
     } else {
       await this.writeCmd("MIME-Version: 1.0");
       await this.writeCmd("Content-Type: text/plain;charset=utf-8");
       await this.writeCmd(
-        `Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n",
+        `Content-Transfer-Encoding: ${this._content_encoding}` + "\r\n"
       );
-      await this.writeCmd(config.content, "\r\n.\r\n");
+      await this.writeCmd(config.content, "\r\n");
     }
+
+    if (config.attachments && config.attachments.length > 0) {
+      for (const attachment of config.attachments) {
+        await this.writeCmd("--MixBoundary");
+        await this.writeCmd(`Content-Type: ${attachment.contentType}; ${attachment.charset && `charset= ${attachment.charset}; `}name="${attachment.fileName}"`);
+        await this.writeCmd(`Content-Disposition: ${attachment.contentDisposition}; filename="${attachment.fileName}"`);
+        await this.writeCmd(`Content-Transfer-Encoding: ${attachment.encoding}`);
+        if (attachment.contentId) {
+          await this.writeCmd(`Content-ID: <${attachment.contentId}>`);
+        }
+        if (attachment.xAttachmentId) {
+          await this.writeCmd(`X-Attachment-Id: <${attachment.xAttachmentId}>`);
+        }
+        await this.writeCmd("\r\n", attachment.data, "\r\n");
+      }
+
+      this.writeCmd("--MixBoundary--");
+    }
+
+    await this.writeCmd("\r\n.\r\n");
 
     this.assertCode(await this.readCmd(), CommandCode.OK);
   }
@@ -179,7 +207,7 @@ export class SmtpClient {
   }
 
   private useAuthentication(
-    config: ConnectConfig | ConnectConfigWithAuthentication,
+    config: ConnectConfig | ConnectConfigWithAuthentication
   ): config is ConnectConfigWithAuthentication {
     return (config as ConnectConfigWithAuthentication).username !== undefined;
   }

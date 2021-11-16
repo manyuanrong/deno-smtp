@@ -8,6 +8,17 @@ interface ConnectConfigWithAuthentication extends ConnectConfig {
   password: string;
 }
 
+interface Attachment {
+  contentType: string;
+  encoding: string;
+  fileName: string;
+  data: string;
+  charset?: string;
+  contentId?: string;
+  contentDisposition?: string;
+  xAttachmentId?: string;
+}
+
 interface SendConfig {
   to: string;
   from: string;
@@ -15,6 +26,7 @@ interface SendConfig {
   subject: string;
   content: string;
   html?: string;
+  attachments?: Attachment[];
 }
 
 export type { ConnectConfig, ConnectConfigWithAuthentication, SendConfig };

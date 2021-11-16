@@ -40,4 +40,23 @@ await client.send({
   `,
 });
 
+
+await client.send({
+  from: MAIL_USER,
+  to: MAIL_TO_USER,
+  subject: "Deno Smtp build Success" + Math.random() * 1000,
+  content: "plain text email with attachment",
+  html: "<a href='https://github.com'>Github</a> and some attachment",
+  attachments: [
+    {
+      contentType: "text/plain",
+      charset: "UTF-8",
+      fileName: "test.txt",
+      contentDisposition: "attachment",
+      encoding: "base64",
+      data: `dGVzdCBhdHRhY2htZW50IGNvbnRlbnQK`,
+    },
+  ],
+});
+
 await client.close();
