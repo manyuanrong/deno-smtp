@@ -13,6 +13,7 @@ interface Attachment {
   encoding: string;
   fileName: string;
   data: string;
+  charset?: string;
   contentId?: string;
   xAttachmentId?: string;
 }
